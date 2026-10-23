@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.DS_Store
+
+# Third-party publication (J.P. Morgan LTCMA): kept locally, not redistributed
+data/jpm_ltcma_2026_us_matrix_usd.pdf

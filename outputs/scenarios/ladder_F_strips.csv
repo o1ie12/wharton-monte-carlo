@@ -1,0 +1,11 @@
+bill_number,bill_date,bill_amount,security,ticker_or_cusip,type,maturity_date,price_date,price,accrued_per_100,ytm,rung_cost,quantity,data_status
+1,2033-01-01,50000,iShares iBonds Dec 2032 Term Treasury ETF,IBTM,ETF,2032-12-15,2026-10-14,21.67,0.0,0.051664,36535.62,1686,"WInS fill, Oct 14-15 2026"
+2,2034-01-01,50000,iShares iBonds Dec 2033 Term Treasury ETF,IBTO,ETF,2033-12-15,2026-10-14,22.89,0.0,0.052192,34609.68,1512,"WInS fill, Oct 14-15 2026"
+3,2035-01-01,50000,iShares iBonds Dec 2034 Term Treasury ETF,IBTP,ETF,2034-12-15,2026-10-14,23.97,0.0,0.05221,32838.9,1370,"WInS fill, Oct 14-15 2026"
+4,2036-01-01,50000,iShares iBonds Dec 2035 Term Treasury ETF,IBTQ,ETF,2035-12-15,2026-10-14,23.56,0.0,0.0526,31075.64,1319,"WInS fill, Oct 14-15 2026"
+5,2037-01-01,50000,iShares iBonds Dec 2036 Term Treasury ETF,IBTR,ETF,2036-12-15,2026-10-14,23.36,0.0,0.052802,29433.6,1260,"WInS fill, Oct 14-15 2026"
+6,2038-01-01,50000,Treasury STRIPS (principal) Nov 15 2037,TBD,STRIPS,2037-11-15,2026-10-09,55.6982,0.0,0.053414,27849.1,50,"ESTIMATE, STRIPS availability in WInS unconfirmed. Priced from the Treasury par yield curve of 2026-10-09 (bootstrapped zero rate)."
+7,2039-01-01,50000,Treasury STRIPS (principal) Nov 15 2038,TBD,STRIPS,2038-11-15,2026-10-09,52.5176,0.0,0.053934,26258.8,50,"ESTIMATE, STRIPS availability in WInS unconfirmed. Priced from the Treasury par yield curve of 2026-10-09 (bootstrapped zero rate)."
+8,2040-01-01,50000,Treasury STRIPS (principal) Nov 15 2039,TBD,STRIPS,2039-11-15,2026-10-09,49.459,0.0,0.054468,24729.5,50,"ESTIMATE, STRIPS availability in WInS unconfirmed. Priced from the Treasury par yield curve of 2026-10-09 (bootstrapped zero rate)."
+9,2041-01-01,50000,Treasury STRIPS (principal) Nov 15 2040,TBD,STRIPS,2040-11-15,2026-10-09,46.5119,0.0,0.055021,23255.95,50,"ESTIMATE, STRIPS availability in WInS unconfirmed. Priced from the Treasury par yield curve of 2026-10-09 (bootstrapped zero rate)."
+10,2042-01-01,50000,Treasury STRIPS (principal) Nov 15 2041,TBD,STRIPS,2041-11-15,2026-10-09,43.6895,0.0,0.05559,21844.75,50,"ESTIMATE, STRIPS availability in WInS unconfirmed. Priced from the Treasury par yield curve of 2026-10-09 (bootstrapped zero rate)."

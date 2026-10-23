@@ -1,0 +1,180 @@
+{
+ "generated": "2026-10-16",
+ "n_sims": 500000,
+ "seed": 20270101,
+ "inputs_sha256": "a9d68603fb04a3147d5dcb5ed79d613d8c7f19a4958a01b3f8e9d94419f0a8de",
+ "n_bills": 10,
+ "rule_label": "Rate rule (1.0%)",
+ "backstop_amount": 10000.0,
+ "all_paid_with_backstop": 1.0,
+ "all_paid_without_backstop": 0.925854,
+ "worst_scenario": "combined_low_rates_p10",
+ "worst_description": "Treasury yields 2 pts lower at the Jan 2027 purchase AND T-bills at 0.5% every year 2027-2042; P10 stock returns.",
+ "worst_unpaid": 660.7837982833371,
+ "worst_backstop_covers": true,
+ "worst_backstop_interest": 459.10579145065316,
+ "worst_backstop_left": 9798.321993167314,
+ "worst_unpaid_after_backstop": 0.0,
+ "worst_facility": 48758.56232919249,
+ "bill_dollars": 500000.0,
+ "coverage_median": 0.994802866755893,
+ "valuation_year": 2033,
+ "topup_median": 18210.370257050014,
+ "facility_median": 139465.6614425633,
+ "range_label": "[P10, P50]",
+ "range_low": 91000.0,
+ "range_high": 139000.0,
+ "range_p_low": 0.901068,
+ "facility_p10": 91209.73853726352,
+ "oct2026_facility_median": 140606.986113968,
+ "oct2026_facility_p10": 93235.58685693776,
+ "end_result": {
+  "money_in": {
+   "ladder": 300000.0,
+   "ladder_year": 2027,
+   "growth": 150000.0,
+   "growth_year": 2028,
+   "total": 450000.0
+  },
+  "bills": {
+   "n": 10,
+   "amount": 50000.0,
+   "first": 2033,
+   "last": 2042,
+   "total": 500000.0,
+   "paid": {
+    "median": 500000.0,
+    "p10": 500000.0
+   },
+   "seeds": [
+    {
+     "seed": 20270101,
+     "n": 500000,
+     "p_paid": 1.0,
+     "fails": 0
+    },
+    {
+     "seed": 1,
+     "n": 500000,
+     "p_paid": 1.0,
+     "fails": 0
+    },
+    {
+     "seed": 2,
+     "n": 500000,
+     "p_paid": 1.0,
+     "fails": 0
+    },
+    {
+     "seed": 3,
+     "n": 500000,
+     "p_paid": 1.0,
+     "fails": 0
+    }
+   ]
+  },
+  "facility": {
+   "median": 139465.6614425633,
+   "p10": 91209.73853726352
+  },
+  "cushion": {
+   "total": {
+    "median": 46488.553814187755,
+    "p10": 30403.246179087837
+   },
+   "free": {
+    "median": 36488.553814187755,
+    "p10": 20403.246179087837
+   },
+   "backstop": 10000.0
+  },
+  "leftover": {
+   "median": 33476.53178386012,
+   "p10": 12270.330998362124,
+   "reserve": {
+    "median": 20173.004105590022,
+    "p10": 1413.5505103356627
+   },
+   "backstop": {
+    "median": 13284.58365444459,
+    "p10": 10764.520967589271
+   }
+  },
+  "total_value": {
+   "median": 712909.6699142861,
+   "p10": 641286.2783081824
+  },
+  "bill_sources": {
+   "years": [
+    2033,
+    2034,
+    2035,
+    2036,
+    2037,
+    2038,
+    2039,
+    2040,
+    2041,
+    2042
+   ],
+   "own": [
+    49699.81018670776,
+    49649.03055192133,
+    49597.90858549973,
+    49549.16764940152,
+    49500.01643141038,
+    48519.363125937365,
+    47806.720163189675,
+    47700.274113931984,
+    47266.31189643029,
+    47924.109632408705
+   ],
+   "reserve": [
+    300.18981329224334,
+    350.9694480786711,
+    402.091414500268,
+    450.83235059848084,
+    499.9835685896178,
+    1480.636874062635,
+    2193.279836810325,
+    2299.725886068016,
+    2732.9107127808966,
+    1907.9097073035227
+   ],
+   "backstop": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.7773907887941273,
+    167.98066028759345
+   ],
+   "backstop_used_share": 0.074146,
+   "backstop_used_median": 2114.3607281870645
+  }
+ },
+ "option_decision": {
+  "A2": {
+   "facility_median": 139465.6614425633,
+   "cushion_free_median": 36488.553814187755,
+   "worst_seed": 3,
+   "spare": 1259.298039326386,
+   "spare_share": 0.1259298039326386,
+   "fails": 0,
+   "seeds": 4
+  },
+  "A4": {
+   "facility_median": 141366.7669356811,
+   "cushion_free_median": 34622.25564522704,
+   "worst_seed": 3,
+   "spare": 775.9663164784724,
+   "spare_share": 0.0620773053182777,
+   "fails": 0,
+   "seeds": 4
+  }
+ }
+}

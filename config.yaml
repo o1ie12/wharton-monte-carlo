@@ -1,0 +1,405 @@
+# Monte Carlo assumptions for the client investment plan.
+#
+# Every assumption is a leaf with three required fields:
+#   value:  the number or setting the model uses
+#   source: citation or URL ("TODO" while unsourced)
+#   status: sourced | policy | placeholder   (sourced and policy count as resolved)
+# An optional `note` says what the value means. Placeholders must be sourced (Kyan and
+# Nathan are supplying them) before client use or deployment; summary.md, the dashboard
+# and check_deploy.py all flag them. Do not invent sources or values.
+#
+# Rates are decimals (0.07 = 7%). Yield shifts are decimals (0.005 = 0.50 pt).
+
+simulation:
+  n_sims:
+    value: 100000
+    source: "Team decision, Oct 13 2026: official run (run_simulation.py writes outputs/ with this many paths)."
+    status: sourced
+  dashboard_n_sims:
+    value: 10000
+    source: "Team decision, Oct 13 2026: dashboard default; 10,000 paths keeps the median within 1% of 50,000 (tests/test_validation.py)."
+    status: sourced
+  report_n_sims:
+    value: 500000
+    source: "Team decision, Oct 13 2026: final report numbers only (run_simulation.py --final), and only once no assumption is a placeholder."
+    status: sourced
+  seed:
+    value: 20270101
+    source: "Model setting: fixed seed so every run is reproducible."
+    status: sourced
+  robustness_seeds:
+    value: [1, 2, 3]
+    source: "Team spec (rounds 6-7, Oct 14-16 2026): the official run is repeated on these seeds to show the bill result does not depend on the seed (outputs/end_result.md)."
+    status: policy
+
+plan:
+  ladder_purchase_date:
+    value: "2027-01-01"
+    source: "Plan spec (team brief): $300,000 buys the Treasury ladder in Jan 2027."
+    status: sourced
+  ladder_budget:
+    value: 300000
+    source: "Plan spec (team brief): Jan 2027 ladder funding."
+    status: sourced
+  bill_amount:
+    value: 50000
+    source: "Plan spec (team brief): ten $50,000 bills, Jan 1 of 2033 through 2042."
+    status: sourced
+  growth_contribution_year:
+    value: 2028
+    source: "Plan spec (team brief): growth bucket funded Jan 2028."
+    status: sourced
+  growth_contribution:
+    value: 150000
+    source: "Plan spec (team brief): $150,000 to the growth bucket in Jan 2028."
+    status: sourced
+  valuation_year:
+    value: 2033
+    source: "Plan spec (team brief): everything is valued at Jan 2033."
+    status: sourced
+
+ladder:
+  csv_path:
+    value: "ladder.csv"
+    source: "WInS fills, Oct 14-15 2026 (data/wins_fills_2026-10.csv; ladder.csv is rebuilt from it by build_ladder.py): quantities, clean fill prices, cash cost excluding commission, accrued WInS charged, and YTMs backed out of the fill prices (outputs/wins_fills.md). Round 6 sheet with estimates kept as data/ladder_round6_estimates.csv. Any row whose data_status contains ESTIMATE is flagged in summary.md and the dashboard."
+    status: sourced
+  pricing_date:
+    value: "2026-09-30"
+    source: "Fallback quote date for ladder.csv rows without a price_date (rows now carry their own dates: Sep 25-Oct 13, 2026). Used only to check the sheet's costs; the simulation prices the ladder on the Jan 2027 purchase date."
+    status: sourced
+  bond_payout_model:
+    value: "cashflows"
+    source: "Team decision (Oct 1 2026): Treasury rungs pay their actual coupons and principal for the ladder.csv quantity, reinvested at simulated T-bill rates. 'face' = plan-spec simplification where each rung pays exactly $50,000."
+    status: sourced
+  compounding_per_year:
+    value: 2
+    source: "Market convention: Treasury yields are quoted semiannual bond-equivalent (reproduces ladder.csv costs, see tests)."
+    status: sourced
+  day_count_basis:
+    value: 365.25
+    source: "Model convention: year fraction = actual days / 365.25."
+    status: sourced
+  cost_check_slack:
+    value: 25.0
+    source: "Model setting: $ allowed per rung beyond half a share/bond of rounding when checking ladder.csv costs (sheet rows are priced on different days)."
+    status: sourced
+  share_tolerance:
+    value: 2
+    source: "Team spec, Oct 13 2026: ETF share counts within 2 shares of the sizing rule (grows to $50,000 at maturity at the row's YTM) are accepted as given."
+    status: sourced
+  sizing_reinvest_rate:
+    value: null
+    source: "Team spec (round 3), Oct 13 2026: null = use ladder.csv bond quantities (official). A rate resizes the Treasury coupon-bond rungs only, to the smallest whole number of bonds whose coupons and principal reinvested at that rate reach $50,000 by the bill date; used for sizing scenarios."
+    status: sourced
+  ibonds_instrument_label:
+    value: "iBonds"
+    source: "ladder.csv: rungs whose security name contains this text get the iBonds payout error."
+    status: sourced
+  yield_shift_mean:
+    value: 0.0
+    source: "Team policy: no directional view on rates between now and Jan 2027."
+    status: policy
+    note: "Team policy: no directional view on rates between now and Jan 2027."
+  yield_shift_sd:
+    value: 0.005
+    source: "Our calculation: 1-yr std dev of GS10 changes ~1.0 pp (1986-2025, FRED GS10), scaled to ~3 months (Oct 2026 to Jan 2027)."
+    status: sourced
+    note: "Std dev of the one parallel yield move between now and the Jan 2027 purchase (0.5 pp)."
+  ibonds_fee:
+    value: 0.0007
+    source: "iShares iBonds Maturity Case Study: 5 matured Treasury iBonds (IBTA-IBTF) realized -0.1% to +1.9% vs net YTM. https://www.ishares.com/us/literature/presentation/ibonds-series-case-study-en-us.pdf"
+    status: sourced
+    note: "Fee drag: each iBonds payout is reduced by 0.07% per year from the Jan 2027 purchase to maturity."
+  ibonds_error_mean:
+    value: 0.0
+    source: "iShares iBonds Maturity Case Study: 5 matured Treasury iBonds (IBTA-IBTF) realized -0.1% to +1.9% vs net YTM. https://www.ishares.com/us/literature/presentation/ibonds-series-case-study-en-us.pdf"
+    status: sourced
+  ibonds_error_sd_per_year:
+    value: 0.0015
+    source: "iShares iBonds Maturity Case Study: 5 matured Treasury iBonds (IBTA-IBTF) realized -0.1% to +1.9% vs net YTM. https://www.ishares.com/us/literature/presentation/ibonds-series-case-study-en-us.pdf"
+    status: sourced
+    note: "Payout error std dev = 0.15% x years from the Jan 2027 purchase to maturity, capped at ibonds_error_sd_cap."
+  ibonds_error_sd_cap:
+    value: 0.015
+    source: "iShares iBonds Maturity Case Study: 5 matured Treasury iBonds (IBTA-IBTF) realized -0.1% to +1.9% vs net YTM. https://www.ishares.com/us/literature/presentation/ibonds-series-case-study-en-us.pdf"
+    status: sourced
+    note: "Cap on the payout error std dev (read as a cap on the std dev, not a truncation of the error)."
+
+tbills:
+  mean:
+    value: 0.032
+    source: "Fed SEP 9/16/2026 (fed funds longer run 3.2) https://federalreserve.gov/monetarypolicy/fomcprojtabl20260916.htm ; CBO Feb 2026 (3.1-3.2 long run) https://www.cbo.gov/system/files/2026-02/61882-Outlook-2026.pdf ; SPF Q1 2026 10-yr bill avg 3.00%"
+    status: sourced
+    note: "Mean T-bill rate for 2030 onward; earlier years use mean_by_year."
+  mean_by_year:
+    value: {2027: 0.040, 2028: 0.039, 2029: 0.036}
+    source: "Fed SEP 9/16/2026 (fed funds median 4.1/3.9/3.6) https://federalreserve.gov/monetarypolicy/fomcprojtabl20260916.htm ; CBO Feb 2026 https://www.cbo.gov/system/files/2026-02/61882-Outlook-2026.pdf ; SPF Q1 2026"
+    status: sourced
+    note: "Mean T-bill rate by year before 2030 (2027: 4.0%, 2028: 3.9%, 2029: 3.6%)."
+  sd:
+    value: 0.015
+    source: "Our calculation: std dev of Dec-to-Dec changes in FRED TB3MS, 1986-2025 https://fred.stlouisfed.org/data/TB3MS.txt"
+    status: sourced
+    note: "Std dev of year-to-year changes in the T-bill rate. The AR(1) shock size is set so the simulated changes match it: shock sd = sd x sqrt((1 + phi) / 2)."
+  ar1_phi:
+    value: 0.85
+    source: "Team spec (round 4b), Oct 13 2026: T-bill persistence, rate_t = mean_t + phi x (rate_(t-1) - mean_(t-1)) + shock."
+    status: policy
+  ar1_start_deviation:
+    value: 0.0
+    source: "Model convention: the AR(1) starts on the sourced mean path (deviation 0 before 2027)."
+    status: sourced
+    note: "Modeling choice to confirm; the floor at 0% is applied to the rate, not to the AR(1) deviation."
+  floor:
+    value: 0.0
+    source: "Model convention: T-bill rates are floored at 0%."
+    status: sourced
+
+growth:
+  us_weight:
+    value: 0.60
+    source: "Plan spec (team brief): 60% US stocks."
+    status: sourced
+  intl_weight:
+    value: 0.40
+    source: "Plan spec (team brief): 40% international stocks."
+    status: sourced
+  us_mean:
+    value: 0.0794
+    source: "J.P. Morgan 2026 LTCMA, USD matrix, data as of 9/30/2025. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_usd.pdf"
+    status: sourced
+    note: "Arithmetic annual return (6.70% geometric)."
+  us_vol:
+    value: 0.1647
+    source: "J.P. Morgan 2026 LTCMA"
+    status: sourced
+  intl_mean:
+    value: 0.091
+    source: "J.P. Morgan 2026 LTCMA, 75% EAFE / 25% EM blend (our calculation; EAFE 8.90% arith, EM 9.74% arith)"
+    status: sourced
+    note: "Arithmetic annual return (~7.5% geometric)."
+  intl_vol:
+    value: 0.179
+    source: "J.P. Morgan 2026 LTCMA, same blend (EAFE 17.63%, EM 20.93%)"
+    status: sourced
+  correlation:
+    value: 0.85
+    source: "J.P. Morgan 2026 LTCMA (US LC vs EAFE 0.87, vs EM 0.73, EAFE vs EM 0.86)"
+    status: sourced
+  rebalance_annually:
+    value: true
+    source: "Team policy: yearly rebalance, simple to follow and explain."
+    status: policy
+
+growth_mix:
+  mix:
+    value: null
+    source: "Model setting: null = the official mix from growth.us_weight / growth.intl_weight (60% US / 40% international). Growth-bucket scenarios set a mix over us, intl, small_cap, us_2x and tbills."
+    status: sourced
+  small_cap_mean:
+    value: 0.0889
+    source: "J.P. Morgan 2026 LTCMA, USD matrix, data as of 9/30/2025. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_usd.pdf U.S. Small Cap row (small cap, value premium not modeled)."
+    status: sourced
+    note: "Arithmetic annual return (6.90% geometric). Proxy for AVUV: small cap, value premium not modeled."
+  small_cap_vol:
+    value: 0.2110
+    source: "J.P. Morgan 2026 LTCMA, USD matrix, data as of 9/30/2025. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_usd.pdf U.S. Small Cap row."
+    status: sourced
+  small_cap_corr_us:
+    value: 0.90
+    source: "J.P. Morgan 2026 LTCMA, USD matrix, data as of 9/30/2025. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_usd.pdf U.S. Small Cap vs U.S. Large Cap."
+    status: sourced
+  small_cap_corr_intl:
+    value: 0.77
+    source: "J.P. Morgan 2026 LTCMA, USD matrix, data as of 9/30/2025. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_usd.pdf Our calculation: U.S. Small Cap vs the 75% EAFE / 25% EM blend (SC vs EAFE 0.78, SC vs EM 0.66, EAFE vs EM 0.86; vols 17.63 / 20.93)."
+    status: sourced
+  us_2x_multiple:
+    value: 2
+    source: "Team spec (round 5, Oct 13 2026): 2x leveraged US large cap (proxy for SSO)."
+    status: sourced
+    note: "approximation; daily reset not modeled, real decay likely worse."
+  us_2x_fee:
+    value: 0.0089
+    source: "Team spec (round 5, Oct 13 2026): SSO fee 0.89% a year."
+    status: sourced
+  scenarios:
+    value:
+      - {key: G1, label: "60% VTI / 40% VXUS (official)", mix: {us: 0.60, intl: 0.40}}
+      - {key: G2, label: "50% VTI / 50% VXUS", mix: {us: 0.50, intl: 0.50}}
+      - {key: G3, label: "70% VTI / 30% VXUS", mix: {us: 0.70, intl: 0.30}}
+      - {key: G4, label: "50% VTI / 30% VXUS / 20% small cap (value premium not modeled)", mix: {us: 0.50, intl: 0.30, small_cap: 0.20}}
+      - {key: G5, label: "100% U.S. Large Cap (all-in US; a tech-heavy fund like QQQ would be more volatile than this)", mix: {us: 1.00}}
+      - {key: G6, label: "100% 2x leveraged US large cap (approximation; daily reset not modeled, real decay likely worse)", mix: {us_2x: 1.00}}
+      - {key: G7, label: "40% VTI / 20% VXUS / 40% T-bills (cautious)", mix: {us: 0.40, intl: 0.20, tbills: 0.40}}
+      - {key: G8, label: "60% VTI / 40% VXUS, Vanguard pessimistic returns", mix: {us: 0.60, intl: 0.40}, returns: vanguard}
+      - {key: G2-V, label: "50% VTI / 50% VXUS, Vanguard pessimistic returns", mix: {us: 0.50, intl: 0.50}, returns: vanguard}
+      - {key: G3-V, label: "70% VTI / 30% VXUS, Vanguard pessimistic returns", mix: {us: 0.70, intl: 0.30}, returns: vanguard}
+    source: "Team spec (round 5, Oct 13 2026): growth-bucket scenarios. VTI = U.S. Large Cap row, VXUS = 75/25 EAFE/EM blend. G5 replaces the planned QQQ case (JPM has no U.S. Large Cap Growth row). G2-V and G3-V added Oct 13 2026: G2 and G3 under the Vanguard pessimistic returns (no G4-V: Vanguard gives no small-cap figure, and G4 already trails G1 at P10)."
+    status: policy
+
+glide_path:
+  enabled:
+    value: true
+    source: "Plan spec (team brief): de-risk the growth bucket before 2033."
+    status: sourced
+  steps:
+    value:
+      - {year: 2031, fraction_of_stocks: "1/3"}
+      - {year: 2032, fraction_of_stocks: "1/2"}
+    source: "Plan spec (team brief): start of 2031 move 1/3 of stocks to T-bills; start of 2032 move 1/2 of remaining stocks."
+    status: sourced
+
+waterfall:
+  topup_rule:
+    value: "rate_rule"
+    source: "Team decision, Oct 1 2026: rate rule tested against fixed rule and low-rate stress tests; backstop covers combined stress case"
+    status: sourced
+  rate_rule_rate:
+    value: 0.010
+    source: "Team policy (Oct 13 2026, option A2 in outputs/hardening_options.md): plan as if cash earns 1% after 2033, below all forecasts of 3.0-3.2%."
+    status: policy
+    note: "Team policy: plan as if cash earns 1% after 2033, below all forecasts of 3.0-3.2%. Locked Oct 16 2026 (round 8): A2 kept over A4; reason in summary.md."
+  fixed_rule_amount:
+    value: 13400
+    source: "Team spec: fixed_rule always moves this amount, about the P99 perfect-foresight top-up (Oct 1 2026 run)."
+    status: sourced
+  ibonds_margin_sd:
+    value: 1.0
+    source: "Team spec (round 4b), Oct 13 2026: the rate rule funds each remaining iBonds bill at target + 1 std dev of its payout error (sourced error size: ladder.ibonds_error_sd_per_year, capped at ibonds_error_sd_cap)."
+    status: policy
+  backstop_amount:
+    value: 10000
+    source: "Team decision, Oct 1 2026: rate rule tested against fixed rule and low-rate stress tests; backstop covers combined stress case"
+    status: sourced
+    note: "Locked Oct 16 2026 (round 8): A2 ($10,000 with the 1.0% rule) kept over A4 ($12,500 with a 1.5% rule); reason in summary.md."
+
+facility:
+  give_pct:
+    value: 0.75
+    source: "Plan spec (team brief): facility contribution = 75% of the Jan 2033 growth value."
+    status: sourced
+
+inflation:
+  rate:
+    value: 0.023
+    source: "SPF Q3 2026 10-yr CPI 2.30%; CBO CPI-U 2.3%; 10-yr breakeven 2.33% (10/9/2026)"
+    status: sourced
+    note: "Inflation for 2028 onward; earlier years use rate_by_year."
+  rate_by_year:
+    value: {2027: 0.024}
+    source: "SPF Q3 2026 10-yr CPI 2.30%; CBO CPI-U 2.3%; 10-yr breakeven 2.33% (10/9/2026)"
+    status: sourced
+    note: "Inflation by year before 2028 (2027: 2.4%)."
+  base_year:
+    value: 2027
+    source: "Model convention: inflation-adjusted figures are in Jan 2027 dollars."
+    status: sourced
+
+reporting:
+  percentiles:
+    value: [5, 10, 25, 50, 75, 90, 95]
+    source: "Plan spec (team brief): percentile table."
+    status: sourced
+  cosponsor_ranges:
+    value: [[25, 75], [10, 90], [10, 50]]
+    source: "Plan spec (team brief): candidate co-sponsor ranges [P25,P75], [P10,P90], [P10,P50]."
+    status: sourced
+  range_rounding:
+    value: 1000
+    source: "Team policy (Oct 16 2026): range endpoints rounded down to the nearest $1,000 at both ends, so the low end never exceeds P10 and the top never exceeds the median. Replaces inward rounding (Oct 13), which could put the low end above P10."
+    status: policy
+    note: "Team policy: rounded down at both ends so we never overstate."
+  recommended_range:
+    value: [10, 50]
+    source: "Team policy."
+    status: policy
+    note: "Example co-sponsor range = P10 to median."
+
+sensitivity:
+  return_shift:
+    value: 0.01
+    source: "Plan spec (team brief): expected stock return +/- 1 point (applied to US and international together)."
+    status: sourced
+  vanguard_pessimistic:
+    value: {us_geo: 0.052, intl_developed_geo: 0.055, em_geo: 0.030, developed_weight: 0.75, em_weight: 0.25, developed_vol: 0.1763, em_vol: 0.2093}
+    source: "Vanguard VCMM, 6/30/2026 (US 5.2% geo, intl developed 5.5% geo, EM 3.0% geo); same volatilities as the base case (J.P. Morgan 2026 LTCMA: EAFE 17.63%, EM 20.93%), same 75/25 blend."
+    status: sourced
+    note: "Sensitivity case. Geometric returns are converted to arithmetic with each asset's volatility, then blended 75/25 for international."
+
+stress_tests:
+  scenarios:
+    value:
+      - name: good
+        description: "Each stock index earns a steady return that puts its 5-year total at its own P90."
+        stock_percentile: 90
+      - name: normal
+        description: "Each stock index earns its median (geometric) annual return every year."
+        stock_percentile: 50
+      - name: bad
+        description: "Each stock index earns a steady return that puts its 5-year total at its own P10."
+        stock_percentile: 10
+      - name: zero_growth
+        description: "Stocks return 0% every year."
+        stock_fixed_return: 0.0
+      - name: crash_2028
+        description: "Stocks -40% in 2028, median returns otherwise."
+        stock_percentile: 50
+        stock_overrides: {2028: -0.40}
+      - name: crash_2032
+        description: "Stocks -40% in 2032, median returns otherwise."
+        stock_percentile: 50
+        stock_overrides: {2032: -0.40}
+      - name: yields_down_1pt
+        description: "Treasury yields 1 pt lower at Jan 2027 purchase; median stock returns."
+        stock_percentile: 50
+        yield_shift: -0.01
+      - name: yields_down_2pt
+        description: "Treasury yields 2 pts lower at Jan 2027 purchase; median stock returns."
+        stock_percentile: 50
+        yield_shift: -0.02
+      - name: contribution_100k
+        description: "Jan 2028 contribution is $100,000 instead of $150,000; median stock returns."
+        stock_percentile: 50
+        contribution: 100000
+      - name: low_rates_2010s
+        description: "T-bills earn 0.5% every year 2027-2042 (2010s-style); median stock returns."
+        stock_percentile: 50
+        tbill_rate: 0.005
+      - name: low_rates_2010s_p10
+        description: "T-bills earn 0.5% every year 2027-2042 (2010s-style); P10 stock returns."
+        stock_percentile: 10
+        tbill_rate: 0.005
+      - name: combined_low_rates
+        description: "Treasury yields 2 pts lower at the Jan 2027 purchase AND T-bills at 0.5% every year 2027-2042; median stock returns."
+        stock_percentile: 50
+        yield_shift: -0.02
+        tbill_rate: 0.005
+      - name: combined_low_rates_p10
+        description: "Treasury yields 2 pts lower at the Jan 2027 purchase AND T-bills at 0.5% every year 2027-2042; P10 stock returns."
+        stock_percentile: 10
+        yield_shift: -0.02
+        tbill_rate: 0.005
+    source: "Plan spec (team brief): fixed-path stress scenarios; low_rates_2010s and combined_low_rates added at team request (Oct 1 2026). Inputs a scenario does not set use their mean values (T-bill mean, yield-shift mean, iBonds error mean)."
+    status: sourced
+
+scenarios:
+  sizing_rates:
+    value: {B: 0.04, C: 0.03, D: 0.02, E: 0.0}
+    source: "Team spec (round 3), Oct 13 2026: sizing-rate scenarios for Treasury rungs 6-10 (A = current: each bond's own YTM)."
+    status: sourced
+  active:
+    value: [A, F]
+    source: "Team decision, Oct 13 2026 (round 4): sizing scenarios B-E rejected; run A (official ladder) and F (STRIPS)."
+    status: policy
+  budget:
+    value: 300000
+    source: "Team spec (round 3), Oct 13 2026: ladder budget for the scenario budget check."
+    status: sourced
+  cash_reserve:
+    value: 500
+    source: "Team spec (round 3), Oct 13 2026: keep $500 in cash; not counted in the SGOV buffer."
+    status: sourced
+  fees:
+    value: 200
+    source: "Team spec (round 3), Oct 13 2026: purchase fees deducted before the SGOV buffer."
+    status: sourced

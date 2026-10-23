@@ -1,0 +1,9 @@
+# TradingView-style dark theme for the dashboard (the Report tab draws its own white sheet; see
+# REPORT in app.py). font: TradingView's charting-library font stack, also used by st.dataframe.
+[theme]
+base = "dark"
+primaryColor = "#2962ff"
+backgroundColor = "#131722"
+secondaryBackgroundColor = "#1e222d"
+textColor = "#d1d4dc"
+font = "-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif"
