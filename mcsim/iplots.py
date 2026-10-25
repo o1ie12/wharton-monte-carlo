@@ -16,18 +16,25 @@ from . import plots
 
 FONT = "Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
 SERIF = "'Source Serif 4', Georgia, 'Times New Roman', serif"
+BENTO_FONT = "Geist, Inter, -apple-system, 'Segoe UI', sans-serif"
+BENTO_MONO = "'Geist Mono', ui-monospace, Menlo, monospace"
 TV_FONT = "-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif"   # TradingView charts
 THEMES = {
     "clean": {"SURFACE": "#ffffff", "INK": "#16191f", "INK_2": "#5c6370", "TITLE": "#16191f", "GRID": "#e8e6e1",
               "BLUE_200": "#e3e9f1", "BLUE_300": "#b9c7da", "BLUE_450": "#1f3a5f", "BLUE_600": "#0f2440",
               "CRITICAL": "#b42318", "UP": "#1f3a5f", "TITLE_FONT": SERIF},
     "market": {**plots.THEMES["market"], "TITLE_FONT": FONT},
-    # TradingView dark: chart #131722, grid #2a2e39 at 60%, text #d1d4dc / #787b86, blue #2962ff,
-    # green #089981, red #f23645.
-    "desk": {"SURFACE": "#131722", "INK": "#d1d4dc", "INK_2": "#787b86", "TITLE": "#ffffff",
-             "GRID": "rgba(42,46,57,0.6)", "BLUE_200": "#1a2547", "BLUE_300": "#1f3474", "BLUE_450": "#2962ff",
-             "BLUE_600": "#5b8cff", "CRITICAL": "#f23645", "UP": "#089981", "TITLE_FONT": TV_FONT,
-             "TICK_FONT": TV_FONT, "MUTED": "#363a45"},
+    # Terminal text and up / down colours from TradingView (#d1d4dc, green #089981, red #f23645).
+    # Terminal palette on the bento cards: transparent paper, lavender accent, green / red for up / down.
+    "desk": {"SURFACE": "rgba(0,0,0,0)", "INK": "#d1d4dc", "INK_2": "#8f92a6", "TITLE": "#ffffff",
+             "GRID": "rgba(255,255,255,0.07)", "BLUE_200": "#2a2670", "BLUE_300": "#3a34a0", "BLUE_450": "#7d75ff",
+             "BLUE_600": "#ffffff", "CRITICAL": "#f23645", "UP": "#089981", "TITLE_FONT": BENTO_FONT,
+             "TICK_FONT": BENTO_MONO, "MUTED": "#2d2f3d"},
+    # Overview cards: transparent so the card gradient shows through; lavender + one soft peach accent.
+    "bento": {"SURFACE": "rgba(0,0,0,0)", "INK": "#e9e9f2", "INK_2": "#8f92a6", "TITLE": "#ffffff",
+              "GRID": "rgba(255,255,255,0.07)", "BLUE_200": "#2a2670", "BLUE_300": "#2f2c78", "BLUE_450": "#7d75ff",
+              "BLUE_600": "#ffffff", "CRITICAL": "#f2a66b", "UP": "#c9c5ff", "TITLE_FONT": BENTO_FONT,
+              "TICK_FONT": BENTO_MONO, "MUTED": "#2d2f3d"},
 }
 CONFIG = {"displaylogo": False, "displayModeBar": "hover",
           "modeBarButtonsToRemove": ["lasso2d", "select2d", "autoScale2d"],
@@ -35,6 +42,8 @@ CONFIG = {"displaylogo": False, "displayModeBar": "hover",
 
 
 def _rgba(hex_color: str, alpha: float) -> str:
+    if not hex_color.startswith("#"):                      # a transparent theme surface: use the page's near-black
+        return f"rgba(10,11,16,{alpha})"
     h = hex_color.lstrip("#")
     r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
     return f"rgba({r},{g},{b},{alpha})"
@@ -378,15 +387,20 @@ def _spread_tags(tags: list[tuple[float, str, str, str]], gap: float) -> list[tu
 
 def desk_paths_chart(m: dict, start_year: int, invested: float, theme: str = "desk",
                      ghost: np.ndarray | None = None, overlay: tuple[str, np.ndarray] | None = None,
-                     height: int = 300) -> go.Figure:
+                     height: int = 300, last_months: int | None = None, selector: bool = True) -> go.Figure:
     """Growth bucket month by month like a price chart: the typical path as the 'price' with a
     fading area under it, the P10-P90 band, faint sample futures, and value tags on the right.
     ghost: the official run's monthly median, drawn dashed when the inputs are modified (like a
-    'compare symbol' line). overlay: (label, value each Jan 1) for one stress scenario's path."""
+    'compare symbol' line). overlay: (label, value each Jan 1) for one stress scenario's path.
+    last_months: show only the last N months; selector: add 1Y / 3Y / All buttons on the chart."""
     t = THEMES[theme]
     muted = t.get("MUTED", t["GRID"])
-    months = m["sample"].shape[1]
-    x = pd.date_range(f"{start_year}-01-01", periods=months, freq="MS")
+    total = m["sample"].shape[1]
+    lo_m = 0 if last_months is None else max(total - int(last_months), 0)
+    x = pd.date_range(f"{start_year}-01-01", periods=total, freq="MS")[lo_m:]
+    m = {k: np.asarray(v)[..., lo_m:] for k, v in m.items()}
+    if ghost is not None:
+        ghost = np.asarray(ghost)[lo_m:]
     fig = go.Figure()
     end = m["sample"][:, -1]
     fade = 0.16 if overlay is not None else 0.38
@@ -399,7 +413,7 @@ def desk_paths_chart(m: dict, start_year: int, invested: float, theme: str = "de
                                  line=dict(width=1, color=t["INK_2"], dash="dot"),
                                  hovertemplate=f"{name} $%{{y:,.0f}}<extra></extra>"))
     fig.add_trace(go.Scatter(
-        x=x, y=m["median"], mode="lines", name="P50", showlegend=False, line=dict(width=2, color=t["BLUE_450"]),
+        x=x, y=m["median"], mode="lines", name="P50", showlegend=False, line=dict(width=2.4, color=t["BLUE_600"]),
         fill="tozeroy", fillgradient=dict(type="vertical", colorscale=[[0, _rgba(t["BLUE_450"], 0.0)],
                                                                          [1, _rgba(t["BLUE_450"], 0.28)]]),
         hovertemplate="P50 $%{y:,.0f}<extra></extra>"))
@@ -431,7 +445,8 @@ def desk_paths_chart(m: dict, start_year: int, invested: float, theme: str = "de
                                       font=dict(family=TV_FONT, size=11, color=t["INK"])))
     fig.update_yaxes(side="right", range=[lo, hi])
     _money_axis(fig)
-    fig.update_xaxes(rangeselector=dict(
+    if selector:
+        fig.update_xaxes(rangeselector=dict(
         buttons=[dict(count=1, label="1Y", step="year", stepmode="backward"),
                  dict(count=3, label="3Y", step="year", stepmode="backward"), dict(step="all", label="All")],
         x=0, y=1.02, xanchor="left", yanchor="bottom", bgcolor=t["SURFACE"], activecolor=muted,
@@ -493,4 +508,13 @@ def desk_bill_chart(res: Results, k: int, theme: str = "desk", height: int = 150
     fig.update_layout(title=None, bargap=0, margin=dict(l=8, r=8, t=22, b=4))
     fig.update_yaxes(tickformat=".0%", side="right", nticks=3)
     _money_axis(fig, "x")
+    return fig
+
+
+# ------------------------------------------------------------------ bento ----
+
+def transparent(fig: go.Figure, height: int | None = None) -> go.Figure:
+    """Let a card's gradient show through a chart and drop its title and legend (the card has its own)."""
+    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", title=None, showlegend=False,
+                      margin=dict(l=4, r=4, t=30, b=4), **({"height": height} if height else {}))
     return fig

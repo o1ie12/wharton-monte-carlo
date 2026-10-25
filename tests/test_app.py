@@ -19,7 +19,7 @@ def page_html(at: AppTest) -> str:
     return " ".join(m.value for m in at.markdown)
 
 
-TOP_TABS = ["Desk", "Report", "Bills", "Facility", "Co-sponsor range", "Stress tests", "Assumptions"]
+TOP_TABS = ["Overview", "Desk", "Report", "Bills", "Facility", "Co-sponsor range", "Stress tests", "Assumptions"]
 
 
 def top_tabs(at: AppTest) -> dict:
@@ -165,10 +165,12 @@ def test_charts_are_interactive_terminal_on_desk_light_in_report():
     at = run_app(ROOT)
     tabs = top_tabs(at)
     bg = lambda tab: {json.loads(c.proto.spec)["layout"]["paper_bgcolor"] for c in tab.get("plotly_chart")}
+    assert len(tabs["Overview"].get("plotly_chart")) == 3               # Overview: ribbon, spread, who pays
     assert len(tabs["Desk"].get("plotly_chart")) == 3                   # Desk: paths, facility, focused bill
     assert len(tabs["Report"].get("plotly_chart")) == 4                 # Report: four exhibits (+ the bill map)
-    assert len(at.get("plotly_chart")) == 13 and len(at.get("imgs")) == 0   # every chart interactive, no PNGs
-    assert bg(tabs["Desk"]) == bg(tabs["Bills"]) == {"#131722"}         # TradingView dark
+    assert len(at.get("plotly_chart")) == 16 and len(at.get("imgs")) == 0   # every chart interactive, no PNGs
+    assert bg(tabs["Overview"]) == {"rgba(0,0,0,0)"}                    # cards supply the gradient
+    assert bg(tabs["Desk"]) == bg(tabs["Bills"]) == {"rgba(0,0,0,0)"}   # terminal charts on gradient cards
     assert bg(tabs["Report"]) == {"#ffffff"}                            # the memo stays on white paper
 
 
@@ -182,3 +184,51 @@ def test_detail_tabs_use_quote_strips_and_panels():
     assert len(at.metric) == 0                                            # no leftover boxed metrics
     from mcsim.analysis import COSPONSOR_NOTE
     assert COSPONSOR_NOTE in " ".join(m.value for m in tabs["Co-sponsor range"].markdown)
+
+
+def test_overview_is_a_bento_grid_with_the_headline_numbers():
+    at = run_app(ROOT)
+    assert not at.exception, [e.value for e in at.exception]
+    html = " ".join(m.value for m in top_tabs(at)["Overview"].markdown)
+    assert list(top_tabs(at))[0] == "Overview"
+    for key in ("bx-dots", "bx-gauge", "bx-tickbar", "bx-chip", "bx-head"):
+        assert key in html, key
+    assert html.count('class="bx-tickbar"') == 4                         # Laura's cushion + three coverage layers
+    dots = html.split('<div class="bx-dots">')[1].split("</div>")[0]
+    assert dots.startswith("&#36;") and "," in dots                      # facility median in the dot-matrix font
+    assert "Facility contribution · Jan 2033 · median" in html
+    for label in ("Co-sponsor range", "Laura keeps", "Plan calendar", "Why the bills are safe", "Stress tests"):
+        assert label in html, label
+    assert html.count('data-lit="56"') == 1                              # 100% of futures: a full gauge
+
+
+def test_overview_range_switch_shortens_the_ribbon():
+    import json
+    at = run_app(ROOT)
+    hero = lambda: next(t for t in json.loads(top_tabs(at)["Overview"].get("plotly_chart")[0].proto.spec)["data"]
+                        if t.get("name") == "P50")
+    n_all = len(hero()["x"])
+    at.get("button_group")[0].set_value("1Y").run()
+    assert not at.exception, [e.value for e in at.exception]
+    assert (n_all, len(hero()["x"])) == (61, 12)                         # the hero price chart follows the switch
+
+
+def test_every_tab_has_the_same_header_and_cards():
+    at = run_app(ROOT)
+    for name, tab in top_tabs(at).items():
+        if name == "Report":                                              # the memo keeps its own masthead
+            continue
+        html = " ".join(m.value for m in tab.markdown)
+        assert f'<span class="bx-h1">{name}</span>' in html, name
+        assert "Official inputs" in html, name
+    desk = " ".join(m.value for m in top_tabs(at)["Desk"].markdown)
+    assert desk.count('class="tk lead"') == 2 and 'class="tk-row"' in desk   # terminal quote strip stays on the Desk
+
+
+def test_tabs_have_no_underline_bar_and_theme_accent_is_lavender():
+    """The pill tabs hide Streamlit's blue selection bar; the theme's primary colour is the lavender accent."""
+    from mcsim.config import load_config
+    app = (ROOT / "app.py").read_text()
+    assert '[class*="SelectionIndicator"] { display:none !important; }' in app
+    cfg = (ROOT / ".streamlit" / "config.toml").read_text()
+    assert 'primaryColor = "#7d75ff"' in cfg and "#2962ff" not in cfg

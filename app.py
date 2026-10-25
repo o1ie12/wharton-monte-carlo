@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from mcsim import analysis, desk, growth, iplots, sparks
+from mcsim import analysis, bento, desk, growth, iplots, sparks
 from mcsim.config import Assumptions, load_config
 from mcsim.model import draw_random, ladder_costs, load_ladder, run_monte_carlo
 
@@ -253,6 +253,140 @@ section[data-testid="stSidebar"] { background: var(--bar); border-right: 1px sol
 </style>
 """
 st.markdown(DESK_CSS, unsafe_allow_html=True)
+BENTO_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Doto:wght@700;900&display=swap');
+.stApp { background: #07080c; }
+/* ---- Overview: bento cards ---- */
+.bx-head { display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin: 4px 2px 14px;
+           font-family: 'Geist', Inter, sans-serif; }
+.bx-h1 { color:#fff; font-size: 2.1rem; font-weight: 650; letter-spacing: -.02em; }
+.bx-upd { color:#7d8094; font-size:.95rem; margin-left: 14px; }
+.bx-pills { display:flex; gap:8px; }
+.bx-pill { font-family:'Geist Mono', monospace; font-size:.74rem; color:#a9acbd; padding: 7px 14px; border-radius: 999px;
+           background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.06); }
+.bx-pill.on { background:#fff; color:#0a0b10; font-weight:600; }
+.bx-pill.mod { background:#f2a66b; color:#1c1008; font-weight:600; }
+[class*="st-key-bx_"] { border-radius: 28px; padding: 22px 26px 20px !important; gap: .35rem !important; overflow: hidden;
+        background: linear-gradient(165deg, #14161e 0%, #0b0c11 100%); border: 1px solid rgba(255,255,255,.07);
+        font-family: 'Geist', Inter, sans-serif; position: relative; }
+.st-key-bx_hero { background: radial-gradient(120% 90% at 8% 0%, #9a94ff 0%, #4a3fe8 22%, #1a1470 52%, #07071c 100%); border: none; }
+.st-key-bx_gauge { background: linear-gradient(170deg, #3a3c49 0%, #14151c 46%, #0a0b0f 100%); }
+.st-key-bx_range { background: linear-gradient(140deg, #f6c6a0 0%, #c8693c 38%, #2a1510 100%); border: none; }
+.st-key-bx_stress { background: linear-gradient(160deg, #1a1b32 0%, #0b0c14 100%); }
+[class*="st-key-bx_"] [data-testid="stMarkdownContainer"] { margin-bottom: 0 !important; }
+[class*="st-key-bx_"] [data-testid="stPlotlyChart"] { margin-top: -4px; }
+.bx-lbl { font-family:'Geist Mono', monospace; font-size:.74rem; letter-spacing:.07em; text-transform:uppercase; color: rgba(255,255,255,.62); }
+.bx-card-title { color:#fff; font-size:1.18rem; font-weight:600; letter-spacing:-.01em; }
+.bx-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.bx-chip { font-family:'Geist Mono', monospace; font-size:.72rem; color:#fff; padding:5px 12px; border-radius:999px;
+           background: rgba(0,0,0,.35); white-space:nowrap; }
+.bx-chip.up { color:#d8ffbf; }
+.bx-dots { font-family:'Doto', 'Geist Mono', monospace; font-weight: 900; font-size: clamp(2.6rem, 5.4vw, 4.6rem); line-height:1;
+           color:#fff; letter-spacing: .02em; margin: 16px 0 2px; }
+.bx-sub { color: rgba(255,255,255,.62); font-size:.9rem; }
+.bx-big { color:#fff; font-size: clamp(1.8rem, 2.6vw, 2.5rem); font-weight:500; letter-spacing:-.025em; line-height:1.05; margin: 14px 0 4px;
+          font-variant-numeric: tabular-nums; }
+.bx-gauge-wrap { position: relative; margin: 6px 6px 0; }
+.bx-gauge-mid { position:absolute; left:0; right:0; bottom: 4px; text-align:center; }
+.bx-gauge-num { color:#fff; font-size: 3.4rem; font-weight:500; letter-spacing:-.04em; line-height:1; }
+.bx-gauge-num small { font-size:1.2rem; color:#a9acbd; margin-left:2px; }
+.bx-gauge-cap { color:#8f92a6; font-size:.82rem; margin-top:2px; }
+.bx-rows { margin-top: 12px; }
+.bx-row { display:flex; align-items:center; gap:10px; padding: 9px 0; border-top: 1px solid rgba(255,255,255,.07); color:#fff; font-size:.95rem; }
+.bx-row .dot { width:9px; height:9px; border-radius:50%; flex:none; }
+.bx-row .nm { flex:1; font-weight:500; } .bx-row .pc { color:#7d8094; font-family:'Geist Mono', monospace; font-size:.78rem; }
+.bx-row .amt { font-family:'Geist Mono', monospace; font-variant-numeric: tabular-nums; min-width: 78px; text-align:right; }
+.bx-ev { display:flex; align-items:center; gap:12px; padding: 9px 0; border-top: 1px solid rgba(255,255,255,.07); color:#fff; font-size:.92rem; }
+.bx-ev .ic { width:26px; height:26px; border-radius:8px; background: rgba(255,255,255,.1); display:grid; place-items:center;
+             font-family:'Geist Mono', monospace; font-size:.7rem; flex:none; }
+.bx-ev .nm { flex:1; font-weight:500; } .bx-ev .dt { color:#7d8094; font-size:.78rem; } .bx-ev .amt { font-variant-numeric: tabular-nums; }
+.bx-layer { margin-top: 12px; }
+.bx-layer .t { display:flex; justify-content:space-between; color:#fff; font-size:.95rem; font-weight:500; margin-bottom: 5px; }
+.bx-layer .t span:last-child { color:#a9acbd; font-family:'Geist Mono', monospace; font-size:.8rem; }
+.bx-tight svg { display:block; }
+.st-key-cmdbar { border-radius: 22px !important; background: rgba(255,255,255,.04) !important; border: 1px solid rgba(255,255,255,.07) !important; }
+.st-key-cmdbar [data-baseweb="input"], .st-key-cmdbar [data-baseweb="select"] > div { border-radius: 12px !important; }
+.st-key-cmdbar .stButton button { border-radius: 999px !important; }
+.bx-pillnote { color:#8f92a6; font-size:.78rem; margin-top: 6px; }
+.st-key-bx_range .bx-lbl, .st-key-bx_range .bx-sub { color: rgba(255,255,255,.78); }
+/* the range switch inside the hero card */
+.st-key-bx_hero [data-testid="stButtonGroup"] button, .st-key-bx_hero [data-testid="stButtonGroup"] [data-baseweb="button-group"] button {
+        background: rgba(0,0,0,.28) !important; color:#fff !important; border-radius: 999px !important; border: none !important;
+        font-family:'Geist Mono', monospace !important; font-size:.76rem !important; min-height: 30px; padding: 0 14px; }
+.st-key-bx_hero [data-testid="stButtonGroup"] button[aria-checked="true"], .st-key-bx_hero [data-testid="stButtonGroup"] button[kind="segmented_controlActive"] {
+        background:#fff !important; color:#0a0b10 !important; font-weight:600; }
+.st-key-bx_hero [data-testid="stButtonGroup"] { justify-content:flex-end; }
+</style>
+"""
+st.markdown(BENTO_CSS, unsafe_allow_html=True)
+UNIFY_CSS = """
+<style>
+/* ---- one design across the dashboard: bento cards with terminal details (mono numbers, crosshair charts,
+        quote strips, heat tiles, status bar). Loaded last, so it overrides the earlier rules. ---- */
+:root { --acc:#7d75ff; --sans:'Geist', Inter, -apple-system, 'Segoe UI', sans-serif; --mono:'Geist Mono', ui-monospace, Menlo, monospace;
+        --bg:#0b0c11; --bar:#13151c; --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.05); }
+.acc { color:#c9c5ff !important; }
+/* tabs as pills */
+[role="tablist"] { gap: 6px !important; border-bottom: none !important; }
+[data-baseweb="tab-highlight"], [data-baseweb="tab-border"], [class*="SelectionIndicator"] { display:none !important; }   /* the bar under the active tab */
+[data-testid="stTab"] { border-radius: 999px !important; padding: 7px 16px !important; background: rgba(255,255,255,.05) !important;
+                        border: 1px solid rgba(255,255,255,.06) !important; }
+[data-testid="stTab"] p { font-family: var(--mono) !important; font-size: .76rem !important; color:#a9acbd !important; }
+[data-testid="stTab"][aria-selected="true"] { background:#fff !important; border-color:#fff !important; }
+[data-testid="stTab"][aria-selected="true"] p { color:#0a0b10 !important; font-weight:600; }
+.stButton button, .stDownloadButton button { border-radius: 999px !important; background: rgba(255,255,255,.06) !important;
+                                             border: 1px solid rgba(255,255,255,.08) !important; }
+[data-testid="stAlert"], [data-testid="stExpander"] details { border-radius: 16px !important; }
+[data-testid="stDataFrame"] { border-radius: 16px !important; border: 1px solid var(--line) !important; overflow:hidden; }
+/* quote strips: separate cards */
+.tk-row { gap: 12px; background: none; border: none !important; }
+.tk-row.q { border: none !important; margin-bottom: 14px; }
+.tk { padding: 16px 18px 15px; border: 1px solid var(--line) !important; border-radius: 22px;
+      background: linear-gradient(165deg, #14161e 0%, #0b0c11 100%); }
+.tk.lead { background: radial-gradient(130% 120% at 0% 0%, #6a60ff 0%, #2a2190 38%, #0a0a26 100%); border-color: transparent !important; box-shadow: none; }
+.tk.lead .px { font-family: 'Doto', var(--mono); font-weight: 900; font-size: clamp(1.35rem, 1.9vw, 1.9rem); letter-spacing:.02em; }
+.tk .sym { font-family: var(--mono); font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.tk .px { font-family: var(--sans); font-weight: 500; letter-spacing: -.02em; }
+.tk .chg { font-family: var(--mono); font-size: .72rem; }
+.sig { border: 1px solid var(--line) !important; border-radius: 999px; padding: 8px 18px; background: rgba(255,255,255,.03); margin: 12px 0; }
+/* panels: rounded gradient cards */
+[class*="st-key-pn_"], .st-key-pn_book { background: linear-gradient(165deg, #14161e 0%, #0b0c11 100%); border: 1px solid var(--line) !important;
+        border-radius: 26px !important; padding: 0 0 12px !important; overflow: hidden; }
+.st-key-pn_paths { background: radial-gradient(120% 100% at 6% 0%, #8e86ff 0%, #4a3fe8 20%, #1a1470 54%, #07071c 100%) !important; border: none !important; }
+.st-key-pn_heat, .st-key-pn_watch { background: linear-gradient(170deg, #2a2c38 0%, #12131a 48%, #0a0b0f 100%); }
+.pn-head { padding: 18px 22px 6px; }
+.pn-title { font-size: 1.08rem; font-weight: 600; letter-spacing: -.01em; }
+.pn-stats { font-family: var(--mono); font-size: .72rem; }
+.pn-sig, .pn-sum { padding-left: 22px; padding-right: 22px; }
+.pn-body { padding: 6px 22px 8px; }
+.pn-scroll { padding: 0 22px 6px; }
+[class*="st-key-pn_"] [data-testid="stPlotlyChart"] { padding: 0 10px 4px; }
+[class*="st-key-pn_"] [data-testid="stDataFrame"], .st-key-pn_book [data-testid="stDataFrame"] { margin: 6px 20px 8px !important; border: 1px solid var(--line) !important; }
+.st-key-pn_watch [data-testid="stDataFrame"] { margin: 6px 14px 0 !important; }
+[class*="st-key-pn_"] .stDownloadButton, [class*="st-key-pn_"] [data-testid="stExpander"] { margin-left: 22px; margin-right: 22px; }
+[class*="st-key-pn_"] [role="tablist"], .st-key-pn_book [role="tablist"] { padding: 6px 22px 0; gap: 6px !important; }
+.st-key-pn_book [data-testid="stTab"] p { font-size: .72rem !important; }
+.tk-row.q .tk { min-height: 92px; }
+.tk .px { white-space: normal !important; line-height: 1.12; overflow-wrap: anywhere; }
+/* tables: mono numbers */
+.tt td { font-family: var(--mono); font-size: .76rem; }
+.tt th { font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; }
+.tt tbody tr:hover td { background: rgba(255,255,255,.04); }
+.tt tr.focus td { background: rgba(125,117,255,.18) !important; } .tt tr.focus td:first-child { box-shadow: inset 2px 0 0 #7d75ff; }
+.tt .chip { border-radius: 999px; padding: 2px 10px; }
+.pn-scroll .tt th { background: #0e0f15 !important; }
+.tip:hover::after { border-radius: 14px; background: #181a24; }
+/* heat tiles: rounded, small gap */
+.st-key-pn_heat [data-testid="stHorizontalBlock"] { gap: 4px !important; margin-bottom: 4px; }
+[class*="st-key-tile_"] button { border-radius: 12px !important; }
+.hm { gap: 4px; } .hm-t { border-radius: 12px; } .hm-legend span:first-child { border-radius: 8px 0 0 8px; } .hm-legend span:last-child { border-radius: 0 8px 8px 0; }
+.note-warn { border-radius: 16px; border-left-width: 3px; }
+.st-key-report { border-radius: 28px !important; }
+.sbar { background: rgba(11,12,17,.92); backdrop-filter: blur(10px); }
+</style>
+"""
+st.markdown(UNIFY_CSS, unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------- controls ----
@@ -468,12 +602,13 @@ def money(x: float) -> str:
     return analysis.money(x).replace("$", r"\$")
 
 
-def chart(name: str, fig=None) -> None:
+def chart(name: str, fig=None, bar: bool = True) -> None:
     """An interactive chart: hover for values, drag to zoom, double-click to reset; the camera
-    icon in its toolbar saves a PNG. Cached figures by name, or pass one built for this rerun."""
+    icon in its toolbar saves a PNG (bar=False hides the toolbar, as on the Overview cards). Cached
+    figures by name, or pass one built for this rerun."""
+    cfg = {**iplots.CONFIG, "toImageButtonOptions": {**iplots.CONFIG["toImageButtonOptions"], "filename": name}}
     st.plotly_chart(fig if fig is not None else figs[name], width="stretch", theme=None, key=f"chart_{name}",
-                    config={**iplots.CONFIG, "toImageButtonOptions": {**iplots.CONFIG["toImageButtonOptions"],
-                                                                      "filename": name}})
+                    config=cfg if bar else {**cfg, "displayModeBar": False})
 
 
 # Coloured cells, terminal colours: teal = good / paid, red = bad / short.
@@ -712,7 +847,20 @@ if changed:
         f"{fmt_value(c, to_ui(c, a0[c.config]))})</span>" for c in changed))
 else:
     sig = f'<span class="tag">Official inputs</span>{lead}'
-st.markdown(f'<div class="tk-row">{tile_html}</div><div class="sig">{sig}</div>', unsafe_allow_html=True)
+def page_head(title: str, sub: str = "") -> None:
+    """Big title with a status line and pills, the same on every tab."""
+    status_pill = ('<span class="bx-pill mod">Modified inputs</span>' if changed
+                   else '<span class="bx-pill on">Official inputs</span>')
+    st.markdown(f'<div class="bx-head"><div><span class="bx-h1">{title}</span><span class="bx-upd">{sub}</span></div>'
+                f'<div class="bx-pills">{status_pill}<span class="bx-pill">seed {a["simulation.seed"]}</span>'
+                f'<span class="bx-pill">{tl.purchase_year}–{last_bill}</span></div></div>', unsafe_allow_html=True)
+
+
+t_overview, t_desk, t_report, t_bills, t_fac, t_range, t_stress, t_assump = st.tabs(
+    ["Overview", "Desk", "Report", "Bills", "Facility", "Co-sponsor range", "Stress tests", "Assumptions"])
+with t_desk:
+    page_head("Desk", "Linked panels: click a bill tile, a stress test or a watchlist row")
+    st.markdown(f'<div class="tk-row">{tile_html}</div><div class="sig">{sig}</div>', unsafe_allow_html=True)
 
 if a0.placeholders():
     st.warning(f"**{len(a0.placeholders())} of {len(a0.values)} assumptions are placeholders (source: TODO).** "
@@ -743,8 +891,6 @@ st.markdown('<div class="sbar">' + "".join(
     f'<span><span class="dot" style="background:{colour[c]}"></span><b>{txt}</b></span>'
     for c, txt in items) + f'<span class="r">{datetime.now():%d %b %Y %H:%M}</span></div>', unsafe_allow_html=True)
 
-t_desk, t_report, t_bills, t_fac, t_range, t_stress, t_assump = st.tabs(
-    ["Desk", "Report", "Bills", "Facility", "Co-sponsor range", "Stress tests", "Assumptions"])
 
 # --------------------------------------------------------------- report ----
 # The memo: plain words and five exhibits on a white sheet, for people who don't know the details.
@@ -945,6 +1091,114 @@ with t_report, st.container(key="report"):
                "The other tabs have the full detail.")
     st.download_button("Download the full summary (summary.md)", out["summary"], file_name="summary.md",
                        mime="text/markdown")
+
+# ------------------------------------------------------------- overview ----
+# Bento grid: big rounded cards, a dot-matrix headline number, a tick gauge and tick bars. Two accent
+# colours only (lavender and a soft peach) on near-black.
+with t_overview:
+    free_med = float(np.median(res.cushion_kept - res.backstop_start))
+    bl_all = out["blotter"]
+    etf_cost = float(bl_all.loc[bl_all["Type"] == "ETF", "Cost"].sum())
+    bond_cost = float(bl_all.loc[bl_all["Type"] == "BOND", "Cost"].sum())
+    cash_cost = max(float(a["plan.ladder_budget"]) - etf_cost - bond_cost, 0.0)
+    page_head("Overview", f"Updated {datetime.now():%H:%M} · {res.n:,} simulated futures")
+
+    g1, g2 = st.columns([2.1, 1], gap="medium")
+    with g1:
+        with st.container(key="bx_hero"):
+            h1, h2 = st.columns([3, 1.2])
+            with h1:
+                st.markdown(f'<div class="bx-lbl">Facility contribution · Jan {vy} · median</div>'
+                            f'<div class="bx-dots">{html_money(facility_med)}</div>'
+                            f'<div class="bx-sub"><span class="bx-chip">1 in 10 below {html_money(p10)}</span> '
+                            f'<span class="bx-chip">1 in 10 above {html_money(p90)}</span></div>', unsafe_allow_html=True)
+            with h2:
+                span = st.segmented_control("Chart range", ["1Y", "3Y", "All"], default="All", key="bx_range_pick",
+                                            label_visibility="collapsed") or "All"
+            months = {"1Y": 12, "3Y": 36}.get(span)
+            ghost_g = monthly("{}", None, FINGERPRINT)["median"] if changed else None
+            chart("bx_hero", iplots.desk_paths_chart(mo, tl.contribution_year, invested, ghost=ghost_g, height=300,
+                                                     last_months=months, selector=False), bar=False)
+            st.markdown(f'<div class="bx-sub">Growth bucket, month by month: {SAMPLE_PATHS} sample futures (green end above '
+                        f'the {html_money(invested)} put in, red below), the median in white, dotted lines for 1 in 10 above '
+                        f'and below. {share_up:.0%} of futures end above what was put in. Hover for values.</div>',
+                        unsafe_allow_html=True)
+    with g2:
+        with st.container(key="bx_gauge"):
+            st.markdown(
+                f'<div class="bx-top"><span class="bx-card-title">Bills</span>'
+                f'<span class="bx-chip">{n_bills} × {html_money(res.bill_amount)}</span></div>'
+                f'<div class="bx-gauge-wrap">{bento.gauge(paid)}<div class="bx-gauge-mid">'
+                f'<div class="bx-gauge-num">{paid * 100:.0f}<small>%</small></div>'
+                f'<div class="bx-gauge-cap">of futures pay every bill</div></div></div>'
+                f'<div class="bx-rows">'
+                f'<div class="bx-row"><span class="dot" style="background:#9a94ff"></span><span class="nm">iBonds funds</span>'
+                f'<span class="pc">{etf_cost / (etf_cost + bond_cost + cash_cost):.0%}</span><span class="amt">{html_money(etf_cost)}</span></div>'
+                f'<div class="bx-row"><span class="dot" style="background:#f2a66b"></span><span class="nm">Treasury bonds</span>'
+                f'<span class="pc">{bond_cost / (etf_cost + bond_cost + cash_cost):.0%}</span><span class="amt">{html_money(bond_cost)}</span></div>'
+                f'<div class="bx-row"><span class="dot" style="background:#fff"></span><span class="nm">Cash buffer</span>'
+                f'<span class="pc">{cash_cost / (etf_cost + bond_cost + cash_cost):.0%}</span><span class="amt">{html_money(cash_cost)}</span></div>'
+                f'</div>', unsafe_allow_html=True)
+
+    c1, c2, c3, c4 = st.columns([1.15, 1, 1.2, 1.2], gap="medium")
+    with c1:
+        with st.container(key="bx_range"):
+            st.markdown(
+                f'<div class="bx-lbl">Co-sponsor range</div>'
+                f'<div class="bx-big">{kk(rec["Low"])}–{kk(rec["High"])}</div>'
+                f'<div class="bx-sub"><span class="bx-chip">{rec["P(at or above low end)"]:.0%} reach the low end</span></div>'
+                f'<div class="bx-sub" style="margin-top:10px">Example range, both ends rounded down so we never overstate. '
+                f'The real range is set in 2031.</div>',
+                unsafe_allow_html=True)
+    with c2:
+        with st.container(key="bx_laura"):
+            st.markdown(
+                f'<div class="bx-top"><span class="bx-lbl">Laura keeps</span><span class="bx-lbl">Jan {vy}</span></div>'
+                f'<div class="bx-big">{html_money(cushion_med)}</div>'
+                f'<div class="bx-tight">{bento.tickbar(free_med / cushion_med if cushion_med else 0)}</div>'
+                f'<div class="bx-pillnote">{html_money(free_med)} free · {html_money(backstop)} held as the safety net</div>',
+                unsafe_allow_html=True)
+    with c3:
+        with st.container(key="bx_plan"):
+            picks = [e for e in events if e[1] in ("TOP-UP", "GIVE", "KEEP", "PAY")]
+            st.markdown('<div class="bx-top"><span class="bx-lbl">Plan calendar</span>'
+                        f'<span class="bx-lbl">{vy}–{last_bill}</span></div>' + "".join(
+                f'<div class="bx-ev"><span class="ic">{kind[0]}</span><span class="nm">{kind.title()}'
+                f'<span class="dt"> · {d}</span></span><span class="amt">{amt}</span></div>'
+                for d, kind, what, amt in picks), unsafe_allow_html=True)
+    with c4:
+        with st.container(key="bx_layers"):
+            layers = [("Ladder alone", stats["p_ladder_only"]), ("+ top-up from growth money", stats["p_all_paid"]),
+                      (f"+ {html_money(backstop)} safety net", paid)]
+            st.markdown('<div class="bx-top"><span class="bx-lbl">Why the bills are safe</span>'
+                        '<span class="bx-chip">3 layers</span></div>' + "".join(
+                f'<div class="bx-layer"><div class="t"><span>{nm}</span><span>{v:.1%}</span></div>'
+                f'<div class="bx-tight">{bento.tickbar(v, n=44)}</div></div>' for nm, v in layers)
+                + '<div class="bx-pillnote">Share of futures where every bill is paid.</div>', unsafe_allow_html=True)
+
+    d1, d2, d3 = st.columns([1.05, 1.2, 1.2], gap="medium")
+    with d1:
+        with st.container(key="bx_stress"):
+            rows_ = [(lbl, stress_rows.loc[k_]) for k_, lbl in OVERVIEW_STRESS if k_ in stress_rows.index]
+            st.markdown('<div class="bx-top"><span class="bx-lbl">Stress tests</span>'
+                        '<span class="bx-lbl">facility gift</span></div>' + "".join(
+                f'<div class="bx-row"><span class="dot" style="background:{"#c9c5ff" if (bool(r["all_bills_paid"]) or bool(r["backstop_covers"])) else "#f2a66b"}"></span>'
+                f'<span class="nm">{html.escape(lbl)}</span><span class="amt">{html_money(float(r["facility_contribution"]))}</span></div>'
+                for lbl, r in rows_) + '<div class="bx-pillnote">Lavender dot = every bill still paid.</div>',
+                unsafe_allow_html=True)
+    with d2:
+        with st.container(key="bx_spread"):
+            st.markdown(f'<div class="bx-top"><span class="bx-card-title">Facility gift spread</span>'
+                        f'<span class="bx-chip">median {html_money(facility_med)}</span></div>', unsafe_allow_html=True)
+            chart("bx_spread", iplots.transparent(iplots.desk_facility_chart(res, rec["Low"], rec["High"], theme="bento",
+                                                                              height=230)), bar=False)
+    with d3:
+        with st.container(key="bx_sources"):
+            st.markdown('<div class="bx-top"><span class="bx-card-title">Who pays each bill</span>'
+                        '<span class="bx-chip">average</span></div>', unsafe_allow_html=True)
+            fig_src = iplots.transparent(iplots.bill_sources_chart(res, "bento"), height=230)
+            fig_src.update_traces(text=None)                                  # % labels don't fit narrow bars
+            chart("bx_sources", fig_src, bar=False)
 
 # ----------------------------------------------------------------- desk ----
 # The main screen: every headline view on one screen, numbers first, like a trading terminal.
@@ -1161,6 +1415,7 @@ with t_desk:
 # Same panels as the Desk: quote strips for the headline figures, titled chart panels, and
 # tables grouped in tabbed panels. Explanations sit in the ⓘ notes.
 with t_bills:
+    page_head("Bills", f"How the {n_bills} bills get paid: ladder, then cash reserve, then the safety net")
     vy = res.timeline.valuation_year
     last = res.timeline.bill_years[-1]
     if out["unverified"]:
@@ -1252,6 +1507,7 @@ with t_bills:
                                      "Ladder-only: P90 shortfall when short", "Whole portfolio: unpaid (mean)"))
 
 with t_fac:
+    page_head("Facility", f"What the facility gets in {vy}, across {res.n:,} futures")
     pt = out["percentiles"]
     quote_strip([(f"Facility gift {vy}, median", html_money(facility_med), f"{a['facility.give_pct']:.0%} of the bucket after the top-up"),
                  ("P10", html_money(p10), "1 in 10 futures below"), ("P90", html_money(p90), "1 in 10 futures above"),
@@ -1272,6 +1528,7 @@ with t_fac:
         money_table(pt, list(pt.columns[1:]))
 
 with t_range:
+    page_head("Co-sponsor range", "The example range and how it is built")
     quote_strip([("Example co-sponsor range (method)", f"{html_money(rec['Low'])}–{rec['High']:,.0f}",
                   f"{rec['P(at or above low end)']:.0%} of futures give at least the low end"),
                  ("Method", "P10 to median", f"both ends rounded down to {html_money(a['reporting.range_rounding'])}"),
@@ -1288,6 +1545,7 @@ with t_range:
                     unsafe_allow_html=True)
 
 with t_stress:
+    page_head("Stress tests", "Fixed bad futures, one per row, plus the sensitivity to stock returns")
     stx = out["stress"]
     vy, last = res.timeline.valuation_year, res.timeline.bill_years[-1]
 
@@ -1362,6 +1620,7 @@ with t_stress:
                    signed=("median_change_vs_base",))
 
 with t_assump:
+    page_head("Assumptions", f"{len(a0.values)} inputs, each with a status and a source")
     rows = []
     for k, v in a0.values.items():
         cur = a[k]

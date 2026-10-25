@@ -2,7 +2,7 @@
 # REPORT in app.py). font: TradingView's charting-library font stack, also used by st.dataframe.
 [theme]
 base = "dark"
-primaryColor = "#2962ff"
+primaryColor = "#7d75ff"
 backgroundColor = "#131722"
 secondaryBackgroundColor = "#1e222d"
 textColor = "#d1d4dc"
